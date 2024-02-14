@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  es01:
+      image: "docker.elastic.co/elasticsearch/elasticsearch:7.10.2"
+      ports:
+        - 9200:9200
+        - 9300:9300
+      volumes:
+        - es-data-es01:/usr/share/elasticsearch/data
+  es02:
+      image: "docker.elastic.co/elasticsearch/elasticsearch:7.10.2"
+      ports:
+        - 9201:9200
+        - 9301:9300
+      volumes:
+        - es-data-es02:/usr/share/elasticsearch/data
+  es03:
+      image: "docker.elastic.co/elasticsearch/elasticsearch:7.10.2"
+      ports:
+        - 9202:9200
+        - 9302:9300
+      volumes: 
+        - es-data-es03:/usr/share/elasticsearch/data
+  kibana:
+      image: "docker.elastic.co/kibana/kibana:7.10.2"
+      ports:
+        - 5601:5601
+      environment:
+        ELASTICSEARCH_HOSTS: "http://es01:9200, http://es02:9200, http://es03:9200"
+
+volumes:
+  es-data-es01:
+  es-data-es02:
+  es-data-es03:
