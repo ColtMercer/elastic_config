@@ -108,6 +108,20 @@ services:
       - "5601:5601"
     environment:
       - 'ELASTICSEARCH_HOSTS=["http://es01:9200","http://es02:9200","http://es03:9200"]'
+
+  data_creator:
+    build:
+      context: data_creator
+      dockerfile: Dockerfile
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: devuser
+      MONGO_INITDB_ROOT_PASSWORD: devpasswd
+      MONGO_HOST: mongo
+    volumes:
+      - ./data_creator/data_creator.py:/data_creator.py
+    depends_on:
+      - mongo
+
 volumes:
   es-data-es01:
   es-data-es02:
