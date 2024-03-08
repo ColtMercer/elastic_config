@@ -4,6 +4,6 @@ https://www.kaggle.com/datasets/lujar1762/stephen-king-books
 
 ## Setup
 ```bash
-docker-compose up
+docker-compose up -d
 ```
 
