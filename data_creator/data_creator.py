@@ -1,6 +1,7 @@
-import pymongo
-import elasticsearch
+from pymongo import MongoClient, collection
+from elasticsearch import Elasticsearch
 import os
+import json
 from time import sleep
 
 
@@ -31,7 +32,10 @@ def populate_mongodb() -> None:
             }
 
             # Save to MongoDB
-            client = pymongo.MongoClient('mongodb://localhost:27017/')
+            client = MongoClient(host=os.environ['MONGO_HOST'],
+                                 port=27017,
+                                 username=os.environ['MONGO_INITDB_ROOT_USERNAME'],
+                                 password=os.environ['MONGO_INITDB_ROOT_PASSWORD'])
             db = client['books']
             collection = db['stephen_king']
             collection.insert_one(book)
@@ -41,14 +45,17 @@ def populate_mongodb() -> None:
     print("Data Collection Complete")
 
 
-def get_mongodb_collection() -> pymongo.collection.Collection:
+def get_mongodb_collection() -> collection.Collection:
     ''' Returns the MongoDB collection
     Args:
         None
     Returns:
         pymongo.collection.Collection: MongoDB collection
     '''
-    client = pymongo.MongoClient('mongodb://localhost:27017/')
+    client = MongoClient(host=os.environ['MONGO_HOST'],
+                        port=27017,
+                        username=os.environ['MONGO_INITDB_ROOT_USERNAME'],
+                        password=os.environ['MONGO_INITDB_ROOT_PASSWORD'])
     db = client['books']
     collection = db['stephen_king']
     return collection
@@ -60,13 +67,25 @@ def index_elasticsearch() -> None:
         None
     '''
     # Index all books to Elasticsearch
-    client = elasticsearch.Elasticsearch('http://localhost:9200')
+    elastic_url = 'http://es01:9200'
+    elastic_user = 'elastic'
+    elastic_password = 'changeme'
+    client = Elasticsearch(
+        [elastic_url],
+        basic_auth=(elastic_user, elastic_password)
+        )
     client.indices.create(index='stephen_king', ignore=400)
 
     collection = get_mongodb_collection()
 
     for book in collection.find():
-        client.index(index='stephen_king', doc_type='book', body=book)
+        book = {
+            "author": book['author'],
+            "year": book['year'],
+            "title": book['title'],
+            "contents": book['contents']
+        }
+        client.index(index='stephen_king', body=book)
         print(f"Indexed {book['title']} to Elasticsearch")
 
     print("Indexing Complete")
