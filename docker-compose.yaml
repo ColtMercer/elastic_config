@@ -35,6 +35,8 @@ services:
       cluster.name: mycluster
       bootstrap.memory_lock: "true"
       ES_JAVA_OPTS: -Xms256m -Xmx256m
+      xpack.security.enabled: true
+      xpack.security.authc.api_key.enabled: true
     volumes:
       - "es-data-es01:/usr/share/elasticsearch/data"
     ulimits:
@@ -59,6 +61,8 @@ services:
       cluster.name: mycluster
       bootstrap.memory_lock: "true"
       ES_JAVA_OPTS: -Xms256m -Xmx256m
+      xpack.security.enabled: true
+      xpack.security.authc.api_key.enabled: true
     volumes:
       - "es-data-es02:/usr/share/elasticsearch/data"
     ulimits:
@@ -83,6 +87,8 @@ services:
       cluster.name: mycluster
       bootstrap.memory_lock: "true"
       ES_JAVA_OPTS: -Xms256m -Xmx256m
+      xpack.security.enabled: true
+      xpack.security.authc.api_key.enabled: true
     volumes:
       - "es-data-es03:/usr/share/elasticsearch/data"
     ulimits:
@@ -120,10 +126,12 @@ services:
     volumes:
       - ./data_creator/data_creator.py:/data_creator.py
     depends_on:
-      - mongo
-      - es01
-      - es02
-      - es03
+      es01:
+        condition: service_healthy
+      es02:
+        condition: service_healthy
+      es03:
+        condition: service_healthy
 
 volumes:
   es-data-es01:

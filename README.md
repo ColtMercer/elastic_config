@@ -7,3 +7,5 @@ https://www.kaggle.com/datasets/lujar1762/stephen-king-books
 docker-compose up -d
 ```
 
+## Troubleshooting
+If data is not created, check the logs of the data_creator container. It may be that the data is not being created because the elasticsearch container is not ready yet. In that case, restart the data_creator container.
