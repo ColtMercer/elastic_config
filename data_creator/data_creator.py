@@ -1,4 +1,5 @@
 from pymongo import MongoClient, collection
+from pymongo.errors import DuplicateKeyError
 from elasticsearch import Elasticsearch
 import os
 import json
@@ -30,6 +31,7 @@ def populate_mongodb() -> None:
                 'title': title,
                 'contents': contents
             }
+            # print(f"Book: {title}, Collected")
 
             # Save to MongoDB
             client = MongoClient(host=os.environ['MONGO_HOST'],
@@ -38,9 +40,12 @@ def populate_mongodb() -> None:
                                  password=os.environ['MONGO_INITDB_ROOT_PASSWORD'])
             db = client['books']
             collection = db['stephen_king']
-            collection.insert_one(book)
+            try:
+                collection.update_one({'title': book['title']}, {'$set': book}, upsert=True)
+                print(f'{title} created or updated in MongoDB')
+            except DuplicateKeyError:
+                print(f"Book: {title}, already in DB")
             client.close()
-            print(f"Saved {title} to MongoDB")
 
     print("Data Collection Complete")
 
@@ -79,14 +84,21 @@ def index_elasticsearch() -> None:
     collection = get_mongodb_collection()
 
     for book in collection.find():
+        # for key, value in book.items():
+        #     if key != 'contents':
+        #         print(f"{key}: {value}")
+        index_id = str(book['_id'])
         book = {
             "author": book['author'],
             "year": book['year'],
             "title": book['title'],
             "contents": book['contents']
         }
-        client.index(index='stephen_king', body=book)
-        print(f"Indexed {book['title']} to Elasticsearch")
+        try: 
+            client.index(index='stephen_king', id=index_id, body=book)
+            print(f"Indexed {book['title']} to Elasticsearch")
+        except Exception as e:
+            print(f'Could not index {book["title"]} to Elasticsearch: {e}')
 
     print("Indexing Complete")
 
@@ -94,4 +106,4 @@ def index_elasticsearch() -> None:
 if __name__ == '__main__':
     populate_mongodb()
     index_elasticsearch()
-    sleep(360) # Give time to run a exec command
+    # sleep(360) # Give time to run a exec command
